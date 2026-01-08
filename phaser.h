@@ -1,9 +1,8 @@
 struct {
 	struct lfo_state lfo;
 	struct biquad_coeff coeff;
-	struct biquad_state ph1, ph2, ph3;
-	float center_f, octaves, Q;
-	float feedback, prev;
+	float s0[2], s1[2], s2[2], s3[2];
+	float center_f, octaves, Q, feedback;
 } phaser;
 
 #define linear(pot, a, b) ((a)+pot*((b)-(a)))
@@ -35,10 +34,10 @@ float phaser_step(float in)
 
 	_biquad_allpass_filter(&phaser.coeff, freq, phaser.Q);
 
-	out = _biquad_step(&phaser.coeff, &phaser.ph1, in + phaser.prev * phaser.feedback);
-	out = _biquad_step(&phaser.coeff, &phaser.ph2, out);
-	out = _biquad_step(&phaser.coeff, &phaser.ph3, out);
-	phaser.prev = out;
+	out = in + phaser.feedback * phaser.s3[0];
+	out = biquad_step_df1(&phaser.coeff, out, phaser.s0, phaser.s1);
+	out = biquad_step_df1(&phaser.coeff, out, phaser.s1, phaser.s2);
+	out = biquad_step_df1(&phaser.coeff, out, phaser.s2, phaser.s3);
 
 	return limit_value(in + out);
 }

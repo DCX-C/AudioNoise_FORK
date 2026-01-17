@@ -22,37 +22,21 @@ typedef unsigned long long u64;
 #define TWO_POW_32 (4294967296.0f)
 #define LN2 0.69314718055994530942
 
-// pow2()-1 using taylor series expansion
-// good enough for the range we're interested in
-// (mainly 0 .. 1, but maybe somebody wants -1 .. 1)
-static inline float fastpow2_m1(float x)
-{
-	const float c1 = LN2,
-		    c2 = LN2*LN2/2,
-		    c3 = LN2*LN2*LN2/6,
-		    c4 = LN2*LN2*LN2/24;
-	float x2 = x*x;
-	float x3 = x2*x;
-	return c1*x + c2*x2 + c3*x3 + c4*x2*x2;
-}
+#define pow2(x) pow(2,x)
 
-static inline float fastpow(float a, float b)
-{
-	union { float f; int i; } u = { a };
-	u.i = (int) (b * (u.i - 1072632447) + 1072632447.0f);
-	return u.f;
-}
+// Turn 0..1 into a range
+#define linear(pot, a, b)	((a)+(pot)*((b)-(a)))
+#define cubic(pot, a, b)	linear((pot)*(pot)*(pot), a, b)
 
-// Very random - but quick - function to smoothly
-// limit x to -1 .. 1 when it approaches -2..2
+// "reasonable frequency range": 220Hz - 6.5kHz with pot center at 1kHz
+#define pot_frequency(pot)	cubic(pot, 220, 6460)
+
 //
-// So you can add two values in the -1..1 range and
-// then limit the sum to that range too.
+// Smoothly limit x to -1 .. 1
+//
 static inline float limit_value(float x)
 {
-	float x2 = x*x;
-	float x4 = x2*x2;
-	return x*(1 - 0.19*x2 + 0.0162*x4);
+	return x / (1 + fabsf(x));
 }
 
 static inline float u32_to_fraction(u32 val)
@@ -90,7 +74,7 @@ static inline float sample_array_read(float delay)
 
 // We can calculate sin/cos at the same time using
 // the table lookup. It's "GoodEnough(tm)" and with
-// 256 entries it's good to about 4.5 digits of
+// 256 entries it's good to about 5.3 digits of
 // precision if I tested it right.
 //
 // Don't use this for real work. For audio? It's fine.

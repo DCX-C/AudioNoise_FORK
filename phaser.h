@@ -5,23 +5,22 @@ struct {
 	float center_f, octaves, Q, feedback;
 } phaser;
 
-#define linear(pot, a, b) ((a)+pot*((b)-(a)))
-#define cubic(pot, a, b) linear((pot)*(pot)*(pot), a, b)
-
 void phaser_init(float pot1, float pot2, float pot3, float pot4)
 {
 	float ms = cubic(pot1, 25, 2000);		// 25ms .. 2s
 	set_lfo_ms(&phaser.lfo, ms);
 	phaser.feedback = linear(pot2, 0, 0.75);
 
-	pot3 = 4*pot3*pot3;				// 0..4, center=1
-	phaser.center_f = linear(pot3, 220, 880);	// 220Hz .. ~3kHz (center at 880)
-	phaser.octaves = 2;				// 55Hz .. ~12kHz
+	phaser.center_f = pot_frequency(pot3);		// 220Hz .. 6.5kHz
+	phaser.octaves = 0.5;				// 155Hz .. 9kHz
 	phaser.Q = linear(pot4, 0.25, 2);
+
+	float lo = pow2(-phaser.octaves) * phaser.center_f;
+	float hi = pow2( phaser.octaves) * phaser.center_f;
 
 	fprintf(stderr, "phaser:");
 	fprintf(stderr, " lfo=%g ms", ms);
-	fprintf(stderr, " center_f=%g Hz", phaser.center_f);
+	fprintf(stderr, " f=%.0f (%.0f - %.0f) Hz", phaser.center_f, lo, hi);
 	fprintf(stderr, " feedback=%g", phaser.feedback);
 	fprintf(stderr, " Q=%g\n", phaser.Q);
 }
@@ -29,7 +28,7 @@ void phaser_init(float pot1, float pot2, float pot3, float pot4)
 float phaser_step(float in)
 {
 	float lfo = lfo_step(&phaser.lfo, lfo_triangle);
-	float freq = fastpow(2, lfo*phaser.octaves) * phaser.center_f;
+	float freq = pow2(lfo*phaser.octaves) * phaser.center_f;
 	float out;
 
 	_biquad_allpass_filter(&phaser.coeff, freq, phaser.Q);

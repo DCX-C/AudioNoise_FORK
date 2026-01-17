@@ -14,7 +14,7 @@ static inline void am_init(float pot1, float pot2, float pot3, float pot4)
 	float freq, lfo;
 
 	am.volume = pot1;
-	freq = fastpow(8000, pot2)+100;
+	freq = pot_frequency(pot2);
 	set_lfo_freq(&am.base_lfo, freq);
 
 	am.depth = pot3;
@@ -23,7 +23,7 @@ static inline void am_init(float pot1, float pot2, float pot3, float pot4)
 
 	fprintf(stderr, "am:");
 	fprintf(stderr, " volume=%g", am.volume);
-	fprintf(stderr, " freq=%g Hz", freq);
+	fprintf(stderr, " freq=%.0f Hz", freq);
 	fprintf(stderr, " depth=%g", am.depth);
 	fprintf(stderr, " lfo=%g Hz\n", lfo);
 }

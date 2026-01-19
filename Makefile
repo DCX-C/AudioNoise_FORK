@@ -3,7 +3,8 @@ CFLAGS = -Wall -O2
 LDLIBS = -lm
 
 PYTHON = python3
-PLAY = ffplay -v fatal -nodisp -autoexit -f s32le -ar 48000 -ch_layout mono -i pipe:0
+#PLAY = ffplay -v fatal -nodisp -autoexit -f s32le -ar 48000 -ch_layout mono -i pipe:0
+PLAY = ffplay -v fatal -nodisp -autoexit -f s32le -ar 48000
 
 effects = flanger echo fm phaser discont am distortion
 flanger_defaults = 0.6 0.6 0.6 0.6
@@ -31,7 +32,7 @@ visualize: input.raw output.raw magnitude.raw outmagnitude.raw
 $(effects): input.raw convert
 	./convert $@ $($@_defaults) input.raw output.raw
 	ffmpeg -y -v fatal -f s32le -ar 48000 -ac 1 -i output.raw -f mp3 $@.mp3
-	$(PLAY) < output.raw
+	$(PLAY) output.raw #$(PLAY) < output.raw
 
 convert.o: CFLAGS += -ffast-math -fsingle-precision-constant # -Wdouble-promotion -Wfloat-conversion
 convert.o: $(HEADERS)
